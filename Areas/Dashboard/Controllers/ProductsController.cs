@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using Ecommerce8.Data;
 using Ecommerce8.Models;
+using Microsoft.AspNetCore.Http;
 
 namespace Ecommerce8.Areas.Dashboard.Controllers
 {
@@ -55,10 +56,31 @@ namespace Ecommerce8.Areas.Dashboard.Controllers
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("Id,Name,Description,Price,Image")] Product product)
+        public async Task<IActionResult> Create( Product product, IFormFile Image)
         {
             if (ModelState.IsValid)
             {
+                if(Image == null)
+                {
+                    ModelState.AddModelError(nameof(Product.Image), "Image is required");
+                    return View(product);
+                }
+
+                var imageName = Guid.NewGuid() + Path.GetExtension(Image.FileName);
+
+                if(!Directory.Exists(Path.Combine(Directory.GetCurrentDirectory(), "wwwroot/img/Products")))
+                {
+                    Directory.CreateDirectory(Path.Combine(Directory.GetCurrentDirectory(), "wwwroot/img/Products"));
+                }
+
+                var savePath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot/img/Products", imageName);
+                await using(var stream = new FileStream(savePath, FileMode.Create))
+                {
+                    await Image.CopyToAsync(stream);
+                }
+
+                product.Image = $"/img/Products/{imageName}";
+                //product.Name = imageName;
                 _context.Add(product);
                 await _context.SaveChangesAsync();
                 return RedirectToAction(nameof(Index));
@@ -87,7 +109,7 @@ namespace Ecommerce8.Areas.Dashboard.Controllers
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, [Bind("Id,Name,Description,Price,Image")] Product product)
+        public async Task<IActionResult> Edit(int id, Product product, IFormFile Image)
         {
             if (id != product.Id)
             {
@@ -98,7 +120,29 @@ namespace Ecommerce8.Areas.Dashboard.Controllers
             {
                 try
                 {
-                    _context.Update(product);
+                    var oldProduct = await _context.Products.FirstOrDefaultAsync(x=>x.Id ==id);
+
+                    if(Image != null)
+                    {
+                        var imageName = Guid.NewGuid() + Path.GetExtension(Image.FileName);
+
+                        if (!Directory.Exists(Path.Combine(Directory.GetCurrentDirectory(), "wwwroot/img/Products")))
+                        {
+                            Directory.CreateDirectory(Path.Combine(Directory.GetCurrentDirectory(), "wwwroot/img/Products"));
+                        }
+
+                        var savePath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot/img/Products", imageName);
+                        await using (var stream = new FileStream(savePath, FileMode.Create))
+                        {
+                            await Image.CopyToAsync(stream);
+                        }
+
+                        oldProduct.Image = $"/img/Products/{imageName}";
+                    }
+                    oldProduct.Price = product.Price;
+                    oldProduct.Name = product.Name;
+                    oldProduct.Description = product.Description;
+                    _context.Update(oldProduct);
                     await _context.SaveChangesAsync();
                 }
                 catch (DbUpdateConcurrencyException)
