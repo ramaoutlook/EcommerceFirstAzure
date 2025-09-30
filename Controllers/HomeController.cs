@@ -9,7 +9,7 @@ using Microsoft.EntityFrameworkCore;
 //Password1!
 //authentication:sql authentication
 //Db Name: ecommerceDB
-//There are lot of things are there.
+//There are lot of things are there
 namespace Ecommerce8.Controllers
 {
     public class HomeController : Controller
