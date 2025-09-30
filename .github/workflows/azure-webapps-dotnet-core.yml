@@ -22,7 +22,7 @@ name: Build and deploy ASP.Net Core app to an Azure Web App
 on:
   push:
     branches:
-      - main    # change if you use a different branch
+      - master    # change if you use a different branch
 
 jobs:
   build-and-deploy:
