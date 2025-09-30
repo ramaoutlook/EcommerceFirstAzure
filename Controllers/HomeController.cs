@@ -5,6 +5,10 @@ using Ecommerce8.ViewModels;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
+//serveradminlogin: bradipeta
+//Password1!
+//authentication:sql authentication
+//Db Name: ecommerceDB
 namespace Ecommerce8.Controllers
 {
     public class HomeController : Controller
